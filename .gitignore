@@ -1,0 +1,15 @@
+.vs/
+.idea/
+**/bin/
+**/obj/
+artifacts/
+build/.cache/
+build/.dotnet/
+third_party/7zip/*.exe
+third_party/7zip/*.dll
+third_party/7zip/License.txt
+work-deps/
+*.user
+*.suo
+*.pdb
+settings.ini
