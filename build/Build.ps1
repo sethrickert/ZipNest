@@ -21,7 +21,7 @@ dotnet restore (Join-Path $repoRoot 'ZipNest.sln') --ignore-failed-sources
 if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
 dotnet build $project -c Release --no-restore -p:Version=$Version -p:FileVersion="$Version.0" -p:AssemblyVersion="$Version.0"
 if ($LASTEXITCODE -ne 0) { throw 'Application build failed.' }
-dotnet build $tests -c Release --no-restore
+dotnet build $tests -c Release --no-restore -p:Version=$Version -p:FileVersion="$Version.0" -p:AssemblyVersion="$Version.0"
 if ($LASTEXITCODE -ne 0) { throw 'Smoke-test build failed.' }
 
 $sevenZip = Join-Path $repoRoot 'third_party\7zip\7z.exe'
@@ -29,8 +29,13 @@ $testExecutable = Join-Path $repoRoot 'tests\ZipNest.SmokeTests\bin\Release\net4
 & $testExecutable $sevenZip
 if ($LASTEXITCODE -ne 0) { throw 'Smoke tests failed.' }
 
-New-Item -ItemType Directory -Force -Path $portableRoot, (Join-Path $portableRoot '7zip') | Out-Null
 $appOutput = Join-Path $repoRoot 'src\ZipNest\bin\Release\net48'
+$builtFileVersion = (Get-Item -LiteralPath (Join-Path $appOutput 'ZipNest.exe')).VersionInfo.FileVersion
+if ($builtFileVersion -ne "$Version.0") {
+    throw "Binary version check failed. Expected $Version.0; received $builtFileVersion."
+}
+
+New-Item -ItemType Directory -Force -Path $portableRoot, (Join-Path $portableRoot '7zip') | Out-Null
 Copy-Item -LiteralPath (Join-Path $appOutput 'ZipNest.exe') -Destination $portableRoot -Force
 if (Test-Path -LiteralPath (Join-Path $appOutput 'ZipNest.exe.config')) {
     Copy-Item -LiteralPath (Join-Path $appOutput 'ZipNest.exe.config') -Destination $portableRoot -Force
